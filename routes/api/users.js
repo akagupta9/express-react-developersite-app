@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { check, validationResult } = require("express-validator/check");
+const { check, validationResult } = require("express-validator");
 const User = require("../../models/User");
 const gravatar = require("gravatar");
 const bcrypt = require("bcryptjs");
 const normalize = require("normalize-url");
+const jwt = require("jsonwebtoken");
+const config = require("config");
 
 //@route  POST api/users
 //@desc  Register The user
@@ -57,10 +59,28 @@ router.post(
 
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
-      await user.save();
+
+      //JsonWebtoken return - JWT
+      const payload = {
+        user: {
+          id: user.id,
+        },
+      };
+
+      jwt.sign(
+        payload,
+        config.get("jwtSecreTKey"),
+        {
+          expiresIn: 360000,
+        },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
     } catch (err) {
       console.error(`error : ${err.message}`);
-      res.status(400).send("Server Error");
+      return res.status(400).send("Server Error");
     }
 
     res.send("User Registered");
