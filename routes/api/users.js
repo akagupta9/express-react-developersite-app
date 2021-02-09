@@ -60,6 +60,8 @@ router.post(
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
 
+      await user.save();
+
       //JsonWebtoken return - JWT
       const payload = {
         user: {
@@ -82,8 +84,6 @@ router.post(
       console.error(`error : ${err.message}`);
       return res.status(400).send("Server Error");
     }
-
-    res.send("User Registered");
   }
 );
 
